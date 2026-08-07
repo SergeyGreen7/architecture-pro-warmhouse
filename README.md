@@ -51,15 +51,15 @@
 
 **Диаграмма контейнеров (Containers)**
 
-Добавьте диаграмму.
+![container.png](docs/architecure/container/container.png)
 
 **Диаграмма компонентов (Components)**
 
-Добавьте диаграмму для каждого из выделенных микросервисов.
+![component.png](docs/architecure/component/component.png)
 
 **Диаграмма кода (Code)**
 
-Добавьте одну диаграмму или несколько.
+![code.png](docs/architecure/code/code.png)
 
 # Задание 3. Разработка ER-диаграммы
 
