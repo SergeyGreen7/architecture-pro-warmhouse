@@ -1,73 +1,31 @@
 @startuml
 !include <C4/C4_Component>
 
-title Component Diagram — Backend core (Device, Telemetry, Heating, Scenarios)
+title C4 Component Diagram - Device and Telemetry services
 
-Person(user, "Пользователь", "Управляет домом через портал")
+Person(user, "API client", "Calls the Warmhouse REST API")
 
-System_Ext(sensor, "Сенсор температуры", "Внешний прибор в доме")
-System_Ext(heater, "Отопление / реле", "Исполнительное устройство")
-
-Container_Boundary(portal, "Web Portal") {
-    Component(ui, "Web UI", "Browser", "Отображение температуры и управление")
+Container_Boundary(device_service, "Device Service") {
+    Component(device_handler, "Device Handler", "Go, Gin", "Handles /api/v1/devices requests")
+    Component(device_db, "Device DB Adapter", "Go, pgx", "Reads and writes sensor metadata")
 }
 
-Container_Boundary(gateway_c, "API Gateway") {
-    Component(gateway, "API Gateway", "HTTP", "Единая точка входа, маршрутизация к сервисам")
+Container_Boundary(telemetry_service, "Telemetry Service") {
+    Component(telemetry_handler, "Telemetry Handler", "Go, Gin", "Handles /api/v1/temperature requests")
+    Component(device_client, "Device Service Client", "Go, net/http", "Loads sensor metadata")
+    Component(temperature_client, "Temperature API Client", "Go, net/http", "Loads current temperature readings")
 }
 
-Container_Boundary(device_svc, "Device Management Service") {
-    Component(device_api, "Device API", "REST / Go", "Регистрация и CRUD датчиков/реле")
-    Component(device_logic, "Device Service", "Go", "Статусы, привязка к дому/комнате")
-    Component(device_repo, "Device Repository", "Go", "Доступ к каталогу устройств")
-    ComponentDb(device_db, "Device DB", "PostgreSQL", "Каталог устройств")
-}
+ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Sensor metadata")
+System_Ext(temperature_api, "Temperature API", "Current temperature readings")
 
-Container_Boundary(telemetry_svc, "Telemetry Service") {
-    Component(tel_api, "Telemetry API", "REST / Java", "Текущая температура и история")
-    Component(collector, "Telemetry Collector", "Java", "Опрос сенсоров, приём измерений")
-    Component(tel_repo, "Telemetry Repository", "Java", "Чтение/запись измерений")
-    ComponentDb(tel_db, "Telemetry DB", "PostgreSQL", "Хранение измерений")
-}
-
-Container_Boundary(heating_svc, "Temperature Control Service") {
-    Component(heat_api, "Heating API", "REST / Python", "Команды вкл/выкл, целевая температура")
-    Component(heat_logic, "Heating Controller", "Python", "Логика управления отоплением")
-    Component(heat_state, "Target State Store", "in-memory / DB", "Целевая температура, последние команды")
-}
-
-Container_Boundary(scenarios_svc, "Scenarios Engine") {
-    Component(sc_api, "Scenarios API", "REST / Go", "CRUD правил автоматизации")
-    Component(sc_engine, "Rule Engine", "Go", "Оценка условий и запуск действий")
-}
-
-Rel(user, ui, "Использует")
-Rel(ui, gateway, "HTTPS")
-
-Rel(gateway, device_api, "HTTPS / REST", "управление устройствами")
-Rel(gateway, tel_api, "HTTPS / REST", "температура / история")
-Rel(gateway, heat_api, "HTTPS / REST", "контроль отопления")
-Rel(gateway, sc_api, "HTTPS / REST", "правила автоматизации")
-
-Rel(device_api, device_logic, "Вызывает")
-Rel(device_logic, device_repo, "Вызывает")
-Rel(device_repo, device_db, "SQL")
-
-Rel(tel_api, tel_repo, "Читает измерения")
-Rel(tel_repo, tel_db, "SQL")
-Rel(collector, tel_repo, "Сохраняет измерения")
-Rel(collector, sensor, "Опрашивает температуру")
-Rel(sensor, collector, "HTTPS / MQTT", "передаёт измерения")
-Rel(sensor, device_api, "Регистрируется")
-Rel(collector, device_api, "Получает список датчиков")
-
-Rel(heat_api, heat_logic, "Вызывает")
-Rel(heat_logic, heat_state, "Читает/пишет цель")
-Rel(heat_logic, heater, "Команды вкл/выкл")
-Rel(heat_logic, device_api, "Резолвит устройство по id")
-
-Rel(sc_api, sc_engine, "Вызывает")
-Rel(sc_engine, tel_api, "Читает условия (температура)")
-Rel(sc_engine, heat_api, "Отправляет команды")
+Rel(user, device_handler, "Manages sensors", "HTTP / REST")
+Rel(user, telemetry_handler, "Requests temperatures", "HTTP / REST")
+Rel(device_handler, device_db, "Calls")
+Rel(device_db, postgres, "Reads and writes", "SQL")
+Rel(telemetry_handler, device_client, "Requests sensor metadata")
+Rel(device_client, device_handler, "Calls /api/v1/devices", "HTTP / REST")
+Rel(telemetry_handler, temperature_client, "Requests readings")
+Rel(temperature_client, temperature_api, "Calls /temperature", "HTTP / REST")
 
 @enduml

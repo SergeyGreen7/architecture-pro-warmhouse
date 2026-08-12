@@ -1,17 +1,15 @@
 @startuml
 !include <C4/C4_Context>
 
-title App System Context Diagram
+title C4 System Context - Warmhouse microservice architecture
 
-Person(customer, "Пользователь", "Пользователь управляет температурой", person)
-System(app, " Система управления теплом в доме", "Предоставляет данные о температуре и позволяет ею управлять")
+Person(user, "Home owner", "Manages sensors and views current temperature")
 
-System_Ext(sensor, "Сенсор температуры", "Внешний прибор, установлен в доме пользователя")
-System_Ext(warmer, "Отопление", "Управление отоплением")
+System(warmhouse, "Warmhouse", "Provides device management and current temperature data")
 
-Rel(customer, app, "Контроирует температуру")
-Rel(sensor, app, "Регистрируется в системе")
-Rel(app, sensor, "Запрос текущей температуры, управление температурой")
-Rel(app, warmer, "Управляет отоплением")
+System_Ext(temperature_api, "Temperature API", "Provides current temperature readings")
+
+Rel(user, warmhouse, "Manages devices and views temperature", "HTTP / REST")
+Rel(warmhouse, temperature_api, "Requests current temperature readings", "HTTP / REST")
 
 @enduml

@@ -1,70 +1,26 @@
 @startuml
 !include <C4/C4_Container>
 
-title Container Diagram — Система управления теплом в доме
+title C4 Container Diagram - Warmhouse microservice architecture
 
-Person(user, "Пользователь", "Владелец дома, мониторит и управляет температурой")
+Person(user, "Home owner", "Manages sensors and views current temperature")
 
-Boundary(clientApp, "Клиентское приложение") {
-    Container(web, "Web Portal", "SPA / Browser", "UI: температура, управление отоплением, дома")
+System_Boundary(warmhouse, "Warmhouse") {
+    Container(monolith, "Warmhouse monolith", "Go, HTTP / REST", "Existing application retained during migration")
+    Container(device, "Device Service", "Go, Gin, port 8083", "Stores and manages sensor metadata")
+    Container(telemetry, "Telemetry Service", "Go, Gin, port 8082", "Combines sensor metadata with current temperature readings")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Stores sensor metadata")
 }
 
-Boundary(publicAPI, "Публичное API") {
-    Container(gateway, "API Gateway", "HTTP", "Единая точка входа, маршрутизация к сервисам")
-}
+System_Ext(temperature_api, "Temperature API", "Returns current temperature readings on port 8081")
 
-Boundary(backendServices, "Backend-сервисы (core)") {
-    Container(device, "Device Management Service", "Go", "Регистрация датчиков, статусы, привязка к дому")
-    ContainerDb(device_db, "Device DB", "PostgreSQL", "Каталог устройств")
-
-    Container(telemetry, "Telemetry Service", "Java", "Сбор и хранение температуры")
-    ContainerDb(telemetry_db, "Telemetry DB", "PostgreSQL", "Измерения температуры")
-
-    Container(heating, "Temperature Control Service", "Python", "Команды вкл/выкл, целевая температура")
-
-    Container(scenarios, "Scenarios Engine", "Go", "Автоматические правила по условиям")
-}
-
-Boundary(billingBoundary, "Биллинг") {
-    Container(billing, "Billing Service", "Java", "Платежи, тарифы, подписки")
-    ContainerDb(billing_db, "Billing DB", "PostgreSQL", "Подписки и платежи")
-}
-
-Boundary(usersBoundary, "Пользователи") {
-    Container(users, "User Management Service", "Go", "Аккаунты, дома, доступ пользователей")
-    ContainerDb(users_db, "Users DB", "PostgreSQL", "Пользователи и дома")
-}
-
-System_Ext(sensor, "Сенсор температуры", "Внешний прибор в доме пользователя")
-System_Ext(heater, "Отопление / реле", "Исполнительное устройство")
-
-Rel(user, web, "HTTPS")
-Rel(web, gateway, "HTTPS / REST")
-
-Rel(gateway, device, "HTTPS / REST", "управление устройствами")
-Rel(gateway, telemetry, "HTTPS / REST", "текущая температура / история")
-Rel(gateway, heating, "HTTPS / REST", "контроль отопления")
-Rel(gateway, scenarios, "HTTPS / REST", "правила автоматизации")
-Rel(gateway, billingBoundary, "HTTPS / REST", "подписка и оплата")
-Rel(gateway, usersBoundary, "HTTPS / REST", "аккаунт и дома")
-
-Rel(device, device_db, "SQL", "читает/пишет")
-Rel(telemetry, telemetry_db, "SQL", "читает/пишет")
-Rel(billing, billing_db, "SQL", "читает/пишет")
-Rel(users, users_db, "SQL", "читает/пишет")
-
-Rel(sensor, device, "HTTPS", "регистрация при включении")
-Rel(sensor, telemetry, "HTTPS / MQTT", "передаёт измерения")
-Rel(telemetry, sensor, "HTTPS", "опрос текущей температуры")
-Rel(telemetry, device, "HTTPS / REST", "список датчиков")
-
-Rel(heating, heater, "протокол устройства", "команды вкл/выкл")
-Rel(heating, device, "HTTPS / REST", "резолв устройства")
-
-Rel(scenarios, telemetry, "HTTPS / REST", "читает условия (температура)")
-Rel(scenarios, heating, "HTTPS / REST", "отправляет команды")
-
-Rel(users, device, "HTTPS / REST", "привязка устройств к дому")
-Rel(billing, users, "HTTPS / REST", "проверка userId / статуса подписки")
+Rel(user, monolith, "Uses existing application", "HTTP / REST")
+Rel(user, device, "Manages sensors", "HTTP / REST")
+Rel(user, telemetry, "Views current temperature", "HTTP / REST")
+Rel(device, postgres, "Reads and writes sensors", "SQL")
+Rel(telemetry, device, "Gets sensor metadata", "HTTP / REST")
+Rel(telemetry, temperature_api, "Gets current readings by sensor ID", "HTTP / REST")
+Rel(monolith, temperature_api, "Gets temperature readings", "HTTP / REST")
+Rel(monolith, postgres, "Reads and writes sensors", "HTTP / REST")
 
 @enduml

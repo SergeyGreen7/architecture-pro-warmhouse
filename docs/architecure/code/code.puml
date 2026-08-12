@@ -1,68 +1,91 @@
 @startuml
-title Warmhouse Management Code Diagram
+title Warmhouse Code Diagram - Device and Telemetry services
 
 top to bottom direction
 
-class User {
-  +String name
-  +String email
-  +List<House> houses
-  +void register()
-  +void login()
+package device_service {
+    class Sensor {
+        +int ID
+        +String Name
+        +SensorType Type
+        +String Location
+        +float64 Value
+        +String Unit
+        +String Status
+        +Time LastUpdated
+        +Time CreatedAt
+    }
+
+    class SensorCreate {
+        +String Name
+        +SensorType Type
+        +String Location
+        +String Unit
+    }
+
+    class SensorUpdate {
+        +String Name
+        +SensorType Type
+        +String Location
+        +float64 Value
+        +String Unit
+        +String Status
+    }
+
+    class DeviceHandler {
+        +GetSensors()
+        +GetSensorByID()
+        +GetSensorsByLocation()
+        +CreateSensor()
+        +UpdateSensor()
+        +DeleteSensor()
+        +UpdateSensorValue()
+    }
+
+    class DB {
+        +GetSensors()
+        +GetSensorByID()
+        +GetSensorsByLocation()
+        +CreateSensor()
+        +UpdateSensor()
+        +DeleteSensor()
+        +UpdateSensorValue()
+    }
 }
 
-class House {
-  +List<Device> devices
-  +List<Sensor> sensors
-  +String address
-  +Date startDate
-  +Date endDate
-  +boolean status
-  +boolean isActive()
-  +boolean create()
-  +boolean delete()
-  +boolean update()
+package telemetry_service {
+    class TemperatureDscr {
+        +int ID
+        +float64 Value
+        +String Unit
+        +Time LastUpdated
+    }
+
+    class TelemetryHandler {
+        +GetTemperature()
+        +GetTemperatureByID()
+        +GetTemperatureByLocation()
+    }
+
+    class DeviceService {
+        +GetTemperatureSensors()
+        +GetTemperatureSensorsByID()
+        +GetTemperatureSensorsByLocation()
+    }
+
+    class TemperatureService {
+        +GetTemperature()
+        +GetTemperatureByID()
+    }
 }
 
-class Device {
-  +Date registerDate
-  +String name
-  +String serialNumber
-  +boolean status
-  +DeviceType deviceType
-  +void activate()
-  +boolean create()
-  +boolean delete()
-  +boolean update()
-}
-
-class DeviceType {
-  +int id
-  +String name
-}
-
-class Sensor {
-  +Date registerDate
-  +String name
-  +String serialNumber
-  +boolean status
-  +SensorType sensorType
-  +float currentValue
-  +String unit
-  +boolean create()
-  +boolean delete()
-  +boolean update()
-}
-
-class SensorType {
-  +int id
-  +String name
-}
-
-User "1" -- "0..*" House : has
-House "1" -- "0..*" Device : has
-House "1" -- "0..*" Sensor : has
-Device "1" -- "1" DeviceType : includes
-Sensor "1" -- "1" SensorType : includes
+DeviceHandler --> DB
+DeviceHandler ..> Sensor
+DeviceHandler ..> SensorCreate
+DeviceHandler ..> SensorUpdate
+TelemetryHandler --> DeviceService
+TelemetryHandler --> TemperatureService
+TelemetryHandler ..> TemperatureDscr
+DeviceService ..> Sensor
 
 @enduml
