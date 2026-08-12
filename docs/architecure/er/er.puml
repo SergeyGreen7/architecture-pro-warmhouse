@@ -1,0 +1,48 @@
+@startuml
+title ER-диаграмма системы «Тёплый дом»
+
+hide circle
+skinparam linetype ortho
+
+entity "Пользователь" as users {
+    * id : BIGINT <<PK>>
+    --
+    name : VARCHAR(100)
+    email : VARCHAR(255) <<UQ>>
+}
+
+entity "Дом" as houses {
+    * id : BIGINT <<PK>>
+    --
+    * user_id : BIGINT <<FK>>
+    address : VARCHAR(255)
+    status : BOOLEAN
+}
+
+entity "Датчик" as sensors {
+    * id : BIGINT <<PK>>
+    --
+    * house_id : BIGINT <<FK>>
+    name : VARCHAR(100)
+    type : VARCHAR(50)
+    location : VARCHAR(100)
+    unit : VARCHAR(20)
+    status : VARCHAR(20)
+    last_updated : TIMESTAMPTZ
+    created_at : TIMESTAMPTZ
+}
+
+entity "Показание температуры" as temperature_readings {
+    * id : BIGINT <<PK>>
+    --
+    * sensor_id : BIGINT <<FK>>
+    value : DOUBLE PRECISION
+    unit : VARCHAR(20)
+    recorded_at : TIMESTAMPTZ
+}
+
+users ||--o{ houses : владеет
+houses ||--o{ sensors : содержит
+sensors ||--o{ temperature_readings : формирует
+
+@enduml

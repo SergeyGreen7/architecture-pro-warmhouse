@@ -1,0 +1,26 @@
+@startuml
+!include <C4/C4_Container>
+
+title C4 Container Diagram - Warmhouse microservice architecture
+
+Person(user, "Home owner", "Manages sensors and views current temperature")
+
+System_Boundary(warmhouse, "Warmhouse") {
+    Container(monolith, "Warmhouse monolith", "Go, HTTP / REST", "Existing application retained during migration")
+    Container(device, "Device Service", "Go, Gin, port 8083", "Stores and manages sensor metadata")
+    Container(telemetry, "Telemetry Service", "Go, Gin, port 8082", "Combines sensor metadata with current temperature readings")
+    ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Stores sensor metadata")
+}
+
+System_Ext(temperature_api, "Temperature API", "Returns current temperature readings on port 8081")
+
+Rel(user, monolith, "Uses existing application", "HTTP / REST")
+Rel(user, device, "Manages sensors", "HTTP / REST")
+Rel(user, telemetry, "Views current temperature", "HTTP / REST")
+Rel(device, postgres, "Reads and writes sensors", "SQL")
+Rel(telemetry, device, "Gets sensor metadata", "HTTP / REST")
+Rel(telemetry, temperature_api, "Gets current readings by sensor ID", "HTTP / REST")
+Rel(monolith, temperature_api, "Gets temperature readings", "HTTP / REST")
+Rel(monolith, postgres, "Reads and writes sensors", "HTTP / REST")
+
+@enduml

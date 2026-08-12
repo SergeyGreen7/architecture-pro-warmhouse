@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: Telemetry Service API
+  version: 1.0.0
+  description: REST API for retrieving current temperature readings.
+servers:
+  - url: http://localhost:8082
+security: []
+paths:
+  /health:
+    get:
+      summary: Check service health
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/v1/temperature:
+    get:
+      summary: Get current temperature for all devices
+      operationId: getTemperatures
+      responses:
+        "200":
+          description: Current temperature readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemperatureReading"
+        "500":
+          $ref: "#/components/responses/Error"
+  /api/v1/temperature/id/{id}:
+    get:
+      summary: Get current temperature by device ID
+      operationId: getTemperatureById
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Current temperature reading
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TemperatureReading"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/temperature/location/{location}:
+    get:
+      summary: Get current temperatures by location
+      operationId: getTemperaturesByLocation
+      parameters:
+        - $ref: "#/components/parameters/Location"
+      responses:
+        "200":
+          description: Current temperature readings in the requested location
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TemperatureReading"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+components:
+  parameters:
+    DeviceId:
+      name: id
+      in: path
+      required: true
+      description: Device ID
+      schema:
+        type: integer
+        minimum: 1
+    Location:
+      name: location
+      in: path
+      required: true
+      description: Device location
+      schema:
+        type: string
+      example: Living Room
+  responses:
+    Error:
+      description: Request failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    TemperatureReading:
+      type: object
+      required: [id, value, unit, last_updated]
+      properties:
+        id:
+          type: integer
+          example: 1
+        value:
+          type: number
+          format: double
+          example: 22.5
+        unit:
+          type: string
+          example: °C
+        last_updated:
+          type: string
+          format: date-time
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

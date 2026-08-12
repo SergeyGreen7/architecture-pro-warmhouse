@@ -1,0 +1,91 @@
+@startuml
+title Warmhouse Code Diagram - Device and Telemetry services
+
+top to bottom direction
+
+package device_service {
+    class Sensor {
+        +int ID
+        +String Name
+        +SensorType Type
+        +String Location
+        +float64 Value
+        +String Unit
+        +String Status
+        +Time LastUpdated
+        +Time CreatedAt
+    }
+
+    class SensorCreate {
+        +String Name
+        +SensorType Type
+        +String Location
+        +String Unit
+    }
+
+    class SensorUpdate {
+        +String Name
+        +SensorType Type
+        +String Location
+        +float64 Value
+        +String Unit
+        +String Status
+    }
+
+    class DeviceHandler {
+        +GetSensors()
+        +GetSensorByID()
+        +GetSensorsByLocation()
+        +CreateSensor()
+        +UpdateSensor()
+        +DeleteSensor()
+        +UpdateSensorValue()
+    }
+
+    class DB {
+        +GetSensors()
+        +GetSensorByID()
+        +GetSensorsByLocation()
+        +CreateSensor()
+        +UpdateSensor()
+        +DeleteSensor()
+        +UpdateSensorValue()
+    }
+}
+
+package telemetry_service {
+    class TemperatureDscr {
+        +int ID
+        +float64 Value
+        +String Unit
+        +Time LastUpdated
+    }
+
+    class TelemetryHandler {
+        +GetTemperature()
+        +GetTemperatureByID()
+        +GetTemperatureByLocation()
+    }
+
+    class DeviceService {
+        +GetTemperatureSensors()
+        +GetTemperatureSensorsByID()
+        +GetTemperatureSensorsByLocation()
+    }
+
+    class TemperatureService {
+        +GetTemperature()
+        +GetTemperatureByID()
+    }
+}
+
+DeviceHandler --> DB
+DeviceHandler ..> Sensor
+DeviceHandler ..> SensorCreate
+DeviceHandler ..> SensorUpdate
+TelemetryHandler --> DeviceService
+TelemetryHandler --> TemperatureService
+TelemetryHandler ..> TemperatureDscr
+DeviceService ..> Sensor
+
+@enduml

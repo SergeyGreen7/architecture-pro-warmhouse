@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Context>
+
+title C4 System Context - Warmhouse microservice architecture
+
+Person(user, "Home owner", "Manages sensors and views current temperature")
+
+System(warmhouse, "Warmhouse", "Provides device management and current temperature data")
+
+System_Ext(temperature_api, "Temperature API", "Provides current temperature readings")
+
+Rel(user, warmhouse, "Manages devices and views temperature", "HTTP / REST")
+Rel(warmhouse, temperature_api, "Requests current temperature readings", "HTTP / REST")
+
+@enduml

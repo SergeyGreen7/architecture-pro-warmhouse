@@ -1,0 +1,31 @@
+@startuml
+!include <C4/C4_Component>
+
+title C4 Component Diagram - Device and Telemetry services
+
+Person(user, "API client", "Calls the Warmhouse REST API")
+
+Container_Boundary(device_service, "Device Service") {
+    Component(device_handler, "Device Handler", "Go, Gin", "Handles /api/v1/devices requests")
+    Component(device_db, "Device DB Adapter", "Go, pgx", "Reads and writes sensor metadata")
+}
+
+Container_Boundary(telemetry_service, "Telemetry Service") {
+    Component(telemetry_handler, "Telemetry Handler", "Go, Gin", "Handles /api/v1/temperature requests")
+    Component(device_client, "Device Service Client", "Go, net/http", "Loads sensor metadata")
+    Component(temperature_client, "Temperature API Client", "Go, net/http", "Loads current temperature readings")
+}
+
+ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16", "Sensor metadata")
+System_Ext(temperature_api, "Temperature API", "Current temperature readings")
+
+Rel(user, device_handler, "Manages sensors", "HTTP / REST")
+Rel(user, telemetry_handler, "Requests temperatures", "HTTP / REST")
+Rel(device_handler, device_db, "Calls")
+Rel(device_db, postgres, "Reads and writes", "SQL")
+Rel(telemetry_handler, device_client, "Requests sensor metadata")
+Rel(device_client, device_handler, "Calls /api/v1/devices", "HTTP / REST")
+Rel(telemetry_handler, temperature_client, "Requests readings")
+Rel(temperature_client, temperature_api, "Calls /temperature", "HTTP / REST")
+
+@enduml
