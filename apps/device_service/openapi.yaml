@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: Device Service API
+  version: 1.0.0
+  description: REST API for managing smart-home devices.
+servers:
+  - url: http://localhost:8083
+security: []
+paths:
+  /health:
+    get:
+      summary: Check service health
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/v1/devices:
+    get:
+      summary: Get all devices
+      operationId: getDevices
+      responses:
+        "200":
+          description: Device list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+        "500":
+          $ref: "#/components/responses/Error"
+    post:
+      summary: Create a device
+      operationId: createDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceCreate"
+      responses:
+        "201":
+          description: Device created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+  /api/v1/devices/id/{id}:
+    get:
+      summary: Get a device by ID
+      operationId: getDeviceById
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Device found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /api/v1/devices/location/{location}:
+    get:
+      summary: Get devices by location
+      operationId: getDevicesByLocation
+      parameters:
+        - $ref: "#/components/parameters/Location"
+      responses:
+        "200":
+          description: Devices in the requested location
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+  /api/v1/devices/{id}:
+    parameters:
+      - $ref: "#/components/parameters/DeviceId"
+    put:
+      summary: Update a device
+      operationId: updateDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUpdate"
+      responses:
+        "200":
+          description: Device updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+    delete:
+      summary: Delete a device
+      operationId: deleteDevice
+      responses:
+        "200":
+          description: Device deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+  /api/v1/devices/{id}/value:
+    patch:
+      summary: Update device value and status
+      operationId: updateDeviceValue
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValueUpdate"
+      responses:
+        "200":
+          description: Device value updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+components:
+  parameters:
+    DeviceId:
+      name: id
+      in: path
+      required: true
+      description: Device ID
+      schema:
+        type: integer
+        minimum: 1
+    Location:
+      name: location
+      in: path
+      required: true
+      description: Device location
+      schema:
+        type: string
+      example: Living Room
+  responses:
+    Error:
+      description: Request failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Device:
+      type: object
+      required: [id, name, type, location, value, unit, status, last_updated, created_at]
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Living Room Temperature
+        type:
+          type: string
+          example: temperature
+        location:
+          type: string
+          example: Living Room
+        value:
+          type: number
+          format: double
+          example: 22.5
+        unit:
+          type: string
+          example: °C
+        status:
+          type: string
+          example: active
+        last_updated:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+    DeviceCreate:
+      type: object
+      required: [name, type, location, unit]
+      properties:
+        name:
+          type: string
+          example: Living Room Temperature
+        type:
+          type: string
+          example: temperature
+        location:
+          type: string
+          example: Living Room
+        unit:
+          type: string
+          example: °C
+    DeviceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        location:
+          type: string
+        value:
+          type: number
+          format: double
+        unit:
+          type: string
+        status:
+          type: string
+    ValueUpdate:
+      type: object
+      required: [value, status]
+      properties:
+        value:
+          type: number
+          format: double
+          example: 22.5
+        status:
+          type: string
+          example: active
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+    Message:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
